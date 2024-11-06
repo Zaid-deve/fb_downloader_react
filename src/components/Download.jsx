@@ -25,7 +25,12 @@ export default function Download() {
 
         async function fetchVideoData() {
             try {
-                const response = await fetch(`https://61e6-2401-4900-7c05-c072-d13a-7a6f-1138-f16d.ngrok-free.app/api/?url=${encodeURIComponent(url)}`);
+                const response = await fetch(`https://61e6-2401-4900-7c05-c072-d13a-7a6f-1138-f16d.ngrok-free.app/fb/?url=${encodeURIComponent(url)}`,
+                    {
+                        headers: {
+                            "ngrok-skip-browser-warning":true
+                        }
+                    });
                 const data = await response.json();
 
                 if (data.success) {
@@ -59,7 +64,7 @@ export default function Download() {
     const formatFileSize = (sizeInBytes) => {
         if (sizeInBytes === 0) return 'Size not available';
         const units = ['B', 'KB', 'MB', 'GB'];
-        let size = (Number) (sizeInBytes);
+        let size = (Number)(sizeInBytes);
         let i = 0;
         while (size >= 1024 && i < units.length - 1) {
             size /= 1024;
@@ -69,7 +74,7 @@ export default function Download() {
     };
 
     const { title, duration, links } = videoDetails;
-    const { sd, hd } = links || {}; 
+    const { sd, hd } = links || {};
 
     useEffect(() => {
         const getSize = async () => {
