@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';  // Import Router here
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './config.css'
 import Navbar from './components/Navbar';
 import Home from './components/Home';
