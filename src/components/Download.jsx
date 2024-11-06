@@ -25,7 +25,7 @@ export default function Download() {
 
         async function fetchVideoData() {
             try {
-                const response = await fetch(`/api/?url=${encodeURIComponent(url)}`);
+                const response = await fetch(`https://61e6-2401-4900-7c05-c072-d13a-7a6f-1138-f16d.ngrok-free.app/api/?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
 
                 if (data.success) {

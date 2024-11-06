@@ -7,7 +7,7 @@
     ],
     "headers": [
         {
-            "source": "/api/(.*)",
+            "source": "/fb/(.*)",
             "headers": [
                 {
                     "key": "Access-Control-Allow-Credentials",
