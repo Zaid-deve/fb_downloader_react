@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import heroImg from '/src/assets/top-10-facebook-video-templates.webp'
 
 export default function Search() {
     const [fburl, setFburl] = useState('');
     const [error, setError] = useState('');
+    const [recentSearches, setRecentSearches] = useState([]);
     const navigate = useNavigate();
 
     // Handle input changes
@@ -23,25 +23,27 @@ export default function Search() {
         }
         setError('');
 
-        const url = `/download?url=${encodeURIComponent(fburl)}`;
+        addToRecentSearches(fburl);
 
+        const url = `/download?url=${encodeURIComponent(fburl)}`;
         navigate(url);
     };
 
+    useEffect(() => {
+        setRecentSearches(getRecentSearches());
+    }, []);
+
     return (
         <div className="row g-0 gap-5">
-            <div className="col-6 d-md-block d-none">
-                <img src={heroImg} alt="Facebook Video" className='w-100 rounded-3' />
-            </div>
-            <div className="col">
+            <div className="col-md-7 mx-auto pt-5">
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label htmlFor="fburl" className="form-label h3">
+                        <label htmlFor="fburl" className="form-label h4">
                             Enter Facebook Video Url:
                         </label>
                         <input
                             type="text"
-                            className="form-control bg-light mt-2 border-0"
+                            className="form-control mt-2 border-1 border-secondary"
                             id="fburl"
                             value={fburl}
                             onChange={handleFbUrlChange}
@@ -49,11 +51,27 @@ export default function Search() {
                             autoFocus
                             style={{ height: "45px" }}
                         />
-                        {error && <div className="text-danger mt-2"><i className='bx bxs-error' ></i> {error}</div>}
+                        {error && <div className="text-danger mt-2"><i className='bx bxs-error text-danger' ></i> {error}</div>}
+                    </div>
+
+                    {recentSearches && recentSearches.length ? <h5>Recent Searches:</h5> : ''}
+                    <div className="list-group overflow-auto mb-3" style={{ maxHeight: "160px" }}>
+                        {recentSearches.map((searchUrl, index) => (
+                            <button
+                                key={index}
+                                type="button"
+                                className="list-group-item list-group-item-action d-flex align-items-center bg-light"
+                                onClick={() => setFburl(searchUrl)}>
+                                <span>{searchUrl}</span>
+                                <div className="ms-auto">
+                                    <i className='bx bx-link-external'></i>
+                                </div>
+                            </button>
+                        ))}
                     </div>
 
                     <button type="submit" className="btn btn-dark px-5 btn-lg w-100">
-                        <i class='bx bxs-search h5 m-0 me-2'></i>
+                        <i className='bx bxs-search h5 m-0 me-2'></i>
                         Find Video
                     </button>
                 </form>
@@ -63,6 +81,24 @@ export default function Search() {
 }
 
 export function isValidFbUrl(url) {
-    const regex = /^(https?:\/\/)?(www\.)?facebook\.com\/(watch\/\?v=\d+|[a-zA-Z0-9\.\/_-]+)$/i;
+    const regex = /^(https?:\/\/)?(www\.)?(facebook\.com\/watch\/\?v=[\w-]+|fb\.watch\/[\w-]+)$/i;
     return regex.test(url);
 }
+
+function getRecentSearches() {
+    return JSON.parse(localStorage.getItem('fbhd-searches')) || []
+}
+
+function addToRecentSearches(url) {
+    let recentUrls = getRecentSearches();
+
+    if (!recentUrls.includes(url)) {
+        recentUrls.unshift(url);
+    }
+
+    if (recentUrls.length > 10) {
+        recentUrls = recentUrls.slice(0, 10)
+    }
+
+    localStorage.setItem('fbhd-searches', JSON.stringify(recentUrls));
+};

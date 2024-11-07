@@ -4,13 +4,25 @@ import Error from "./Error";
 import Loader from "./Loader";
 import { Link } from "react-router-dom";
 
+let endpoint = '/api',
+    options = {}
+
+if (location.hostname !== 'localhost') {
+    endpoint = 'https://fbhd.rf.gd'
+    options = {
+        headers: {
+            "ngrok-skip-browser-warning": true
+        }
+    }
+}
+
 export default function Download() {
     const [isLoading, updateLoading] = useState(true);
     const [videoDetails, setVideoDetails] = useState({});
     const [error, setError] = useState(null);
     const [sdSize, setSdSize] = useState(null);
     const [hdSize, setHdSize] = useState(null);
-    const [videoDuration, setDuration] = useState(0);
+    const [videoDuration, setDuration] = useState(null);
 
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
@@ -25,12 +37,7 @@ export default function Download() {
 
         async function fetchVideoData() {
             try {
-                const response = await fetch(`https://61e6-2401-4900-7c05-c072-d13a-7a6f-1138-f16d.ngrok-free.app/fb/?url=${encodeURIComponent(url)}`,
-                    {
-                        headers: {
-                            "ngrok-skip-browser-warning":true
-                        }
-                    });
+                const response = await fetch(`${endpoint}?url=${encodeURIComponent(url)}`, options);
                 const data = await response.json();
 
                 if (data.success) {
@@ -48,7 +55,6 @@ export default function Download() {
         fetchVideoData();
     }, []);
 
-    // Function to fetch the file size of a given URL (SD or HD)
     const fetchFileSize = async (url) => {
         try {
             const response = await fetch(url, { method: 'HEAD' });
@@ -58,19 +64,6 @@ export default function Download() {
             console.error("Error fetching file size:", err);
             return 0;
         }
-    };
-
-    // Convert file size from bytes to a human-readable format
-    const formatFileSize = (sizeInBytes) => {
-        if (sizeInBytes === 0) return 'Size not available';
-        const units = ['B', 'KB', 'MB', 'GB'];
-        let size = (Number)(sizeInBytes);
-        let i = 0;
-        while (size >= 1024 && i < units.length - 1) {
-            size /= 1024;
-            i++;
-        }
-        return `${size?.toFixed(2)} ${units[i]}`;
     };
 
     const { title, duration, links } = videoDetails;
@@ -91,10 +84,11 @@ export default function Download() {
         getSize();
     }, [sd, hd]);
 
-    const formatDuration = (duration) => {
-        const minutes = Math.floor(duration / 60);
-        const seconds = duration % 60;
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    const handleMetadataLoaded = (e) => {
+        const videoDuration = e.target.duration;
+        if (!isNaN(videoDuration)) {
+            setDuration(videoDuration);
+        }
     };
 
     if (isLoading) {
@@ -115,25 +109,25 @@ export default function Download() {
                         style={{ maxHeight: "420px" }}
                         controls
                         src={hd || sd}
-                        onLoadedMetadata={(e) => setDuration(e.target.duration)}
+                        onLoadedMetadata={handleMetadataLoaded}
                     />
                 </div>
                 <div className="col-md-6">
                     <h2>Your video is ready:</h2>
                     <div className="bg-light rounded-3 p-3">
                         <p>{title || 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Mollitia, consequatur.'}</p>
-                        <p className="m-0">{videoDuration ? formatDuration(duration) : 'Duration not available'}</p>
+                        <p className="m-0">Duration: {videoDuration ? formatDuration(Number(videoDuration)) : 'Duration not available'}</p>
                     </div>
                     <h3 className="mt-4">Download Links:</h3>
                     <div className="d-flex flex-wrap gap-3">
                         {sd && (
                             <a href={sd} download className="btn py-2 btn-outline-dark px-3 rounded-5 flex-grow-1 fw-bold">
-                                <i className="bx bxs-video"></i> Download HD -- [{formatFileSize(sdSize)}]
+                                <i className="bx bxs-video"></i> Download HD -- [{getFormattedBytes(sdSize)}]
                             </a>
                         )}
                         {hd && (
                             <a href={hd} download className="btn py-2 btn-dark px-3 rounded-5 flex-grow-1 fw-bold">
-                                <i className="bx bxs-tv"></i> Download Full HD -- [{formatFileSize(hdSize)}]
+                                <i className="bx bxs-tv"></i> Download Full HD -- [{getFormattedBytes(hdSize)}]
                             </a>
                         )}
                     </div>
@@ -141,4 +135,23 @@ export default function Download() {
             </div>
         </>
     );
+}
+
+function getFormattedBytes(bytes, decimals = 2) {
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+        i = Math.floor(Math.log(bytes) / Math.log(1024)),
+        formattedSize = (bytes / Math.pow(1024, i)).toFixed(decimals);
+
+    return `${formattedSize} ${sizes[i]}`;
+}
+
+function formatDuration(duration) {
+    if (isNaN(duration) || duration <= 0) {
+        return "00:00"; // Return fallback if duration is invalid
+    }
+
+    const minutes = Math.floor(duration / 60),
+        seconds = Math.floor(duration % 60);
+
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
