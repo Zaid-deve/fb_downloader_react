@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { isValidFbUrl } from "./Search";
 import Error from "./Error";
 import Loader from "./Loader";
-import { Link } from "react-router-dom";
 
 let endpoint = '/api',
     options = {}
 
 if (location.hostname !== 'localhost') {
-    endpoint = 'https://fbhd.rf.gd'
+    endpoint = 'https://fbhd.rf.gd/fb/'
     options = {
         headers: {
             "ngrok-skip-browser-warning": true
